@@ -307,7 +307,7 @@ export default {
         height: 28px;
         width: -webkit-fill-available;
         border: 1px solid white;
-    }
+      }
 
       .fa-cus-form{
         font-size: 40px;
