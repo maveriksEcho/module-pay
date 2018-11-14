@@ -7,7 +7,6 @@
             <span class="credits credits_value btcu-credits" :data-amount="cred.credits_count*10">{{(cred.credits_count*10).toFixed(2)}} TOKEN</span>
             <span class="amount btcu-amount">
                                     $<div class="amount_value">{{cred.price}}</div>
-
                 <span v-if="discount" class="discount">{{Math.round((cred.credits_count - cred.price) / cred.price * 100)}}% Discount</span>
 
                                 </span>
