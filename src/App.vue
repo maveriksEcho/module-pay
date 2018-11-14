@@ -1,5 +1,4 @@
 <template>
-
     <div>
         <ul class="buy_credits_list">
     <li v-for="cred in credits_packs">
@@ -8,7 +7,6 @@
             <span class="credits credits_value btcu-credits" :data-amount="cred.credits_count*10">{{(cred.credits_count*10).toFixed(2)}} TOKEN</span>
             <span class="amount btcu-amount">
                                     $<div class="amount_value">{{cred.price}}</div>
-
                 <span v-if="discount" class="discount">{{Math.round((cred.credits_count - cred.price) / cred.price * 100)}}% Discount</span>
 
                                 </span>
@@ -43,7 +41,6 @@
            <span>Bitcoin</span>
            <span>{{cripto.btc}} btc</span>
          </div>
-
          </div>
         <div class="btcu-currency-card" @click="selected = 'btcln'" :class="selected == 'btcln' ? 'btcu-selected' : ''" >
           <i class="fa fa-bolt fa-cus-form"></i>
@@ -298,11 +295,11 @@ export default {
         align-items: center;
         height: 40px;
     }
-    .btcu-payment input{
+      .btcu-payment input{
         height: 28px;
         width: -webkit-fill-available;
         border: 1px solid white;
-    }
+      }
 
       .fa-cus-form{
         font-size: 40px;
