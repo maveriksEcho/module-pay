@@ -300,11 +300,11 @@ export default {
         align-items: center;
         height: 40px;
     }
-    .btcu-payment input{
+      .btcu-payment input{
         height: 28px;
         width: -webkit-fill-available;
         border: 1px solid white;
-    }
+      }
 
       .fa-cus-form{
         font-size: 40px;
