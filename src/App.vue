@@ -1,5 +1,4 @@
 <template>
-
     <div>
         <ul class="buy_credits_list">
     <li v-for="cred in credits_packs">
