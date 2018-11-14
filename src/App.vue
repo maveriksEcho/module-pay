@@ -80,16 +80,11 @@
                     <button><i class="fa fa-copy"></i></button>
                 </div>
             </div>
-
-
         </div>
-
-
-
       </div>
       <div class="btcu-modal-footer">
         <div style="font-size: 10px;color: #888; margin: 10px 0 0px 0;float: left">Create {{date}}</div>
-        <div style="font-size: 10px;color: #888; margin: 10px 0 0px 0;float: right">Powered by <a href="https:\\btcu.ua">btcu.ua</a></div>
+        <div style="font-size: 10px;color: #888; margin: 10px 0 0px 0;float: right">Powered by <a href="https:\\btcu.biz">btcu.biz</a></div>
       </div>
       </div>
   </div>
