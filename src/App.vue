@@ -27,7 +27,7 @@
     <div class="btcu-modal-content">
       <div class="btcu-modal-header">
 
-        <label class="btcu-modal-close" for="btcu-modal" @click="show = false">&#10005;</label>
+        <label class="btcu-modal-close" @click="show = false">&#10005;</label>
         <div style="float: right; text-align: right  ">
           <div>10$</div>
           <div>100TOKEN</div></div>
@@ -41,7 +41,7 @@
            <i class="fa fa-btc fa-cus-form"></i>
            <div class="btcu-currency">
            <span>Bitcoin</span>
-           <span>0.00000001 btc</span>
+           <span>{{cripto.btc}} btc</span>
          </div>
 
          </div>
@@ -49,7 +49,7 @@
           <i class="fa fa-bolt fa-cus-form"></i>
           <div class="btcu-currency">
             <span>Bitcoin Lighting</span>
-            <span>0.00000001 btc</span>
+            <span>{{cripto.btc}} btc</span>
           </div>
         </div>
         <!--<div class="btcu-currency-card">Other cripto</div>
