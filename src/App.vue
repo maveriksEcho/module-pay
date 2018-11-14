@@ -42,7 +42,6 @@
            <span>Bitcoin</span>
            <span>{{cripto.btc}} btc</span>
          </div>
-
          </div>
         <div class="btcu-currency-card" @click="selected = 'btcln'" :class="selected == 'btcln' ? 'btcu-selected' : ''" >
           <i class="fa fa-bolt fa-cus-form"></i>
