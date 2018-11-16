@@ -2,7 +2,7 @@
     <div>
         <ul class="buy_credits_list">
     <li v-for="cred in credits_packs">
-        <input type="radio" name="btcu_credits_pack_id" :id="'btcu_credits_pack_id_' + cred.id" :value="cred.id" required :class="email_confirm == 0 ? 'not-approve' : ''" @click="request(cred.id, cred.price )">
+        <input type="radio" name="btcu_credits_pack_id" :id="'btcu_credits_pack_id_' + cred.id" :value="cred.id" required @click="loading=false ; request(cred.id, cred.price, cred.credits_count)">
         <label :for="'btcu_credits_pack_id_' + cred.id" class="add_credits_btn">
             <span class="credits credits_value btcu-credits" :data-amount="cred.credits_count*10">{{(cred.credits_count*10).toFixed(2)}} TOKEN</span>
             <span class="amount btcu-amount">
@@ -26,12 +26,28 @@
       <div class="btcu-modal-header">
 
         <label class="btcu-modal-close" @click="show = false">&#10005;</label>
-        <div style="float: right; text-align: right  ">
-          <div>10$</div>
-          <div>100TOKEN</div></div>
+
+          <div style="float: right; text-align: right" v-if="step == 1">
+          <div>{{amount}}$</div>
+          <div>{{token*10}} TOKEN</div>
+            </div>
+
+          <div v-if="step == 2">
+          <div style="float: left;">Order #{{order_id}}</div>
+          <div style="float: right; text-align: right">
+
+                  <div>{{(btc).toFixed(8)}} BTC</div>
+                  <div>{{amount}}$</div>
+          </div>
+              </div>
       </div>
       <countdown v-if="step == 2" :deadline="time"></countdown>
       <div class="btcu-modal-body">
+          <!--
+
+                                                      STEP 1
+
+       -->
      <div v-if="step == 1">
       <h2>Select payment currency</h2>
 
@@ -39,14 +55,14 @@
            <i class="fa fa-btc fa-cus-form"></i>
            <div class="btcu-currency">
            <span>Bitcoin</span>
-           <span>{{cripto.btc}} btc</span>
+           <span>{{(btc).toFixed(8)}} btc</span>
          </div>
          </div>
         <div class="btcu-currency-card" @click="selected = 'btcln'" :class="selected == 'btcln' ? 'btcu-selected' : ''" >
           <i class="fa fa-bolt fa-cus-form"></i>
           <div class="btcu-currency">
             <span>Bitcoin Lighting</span>
-            <span>{{cripto.btc}} btc</span>
+            <span>{{(btc).toFixed(8)}} btc</span>
           </div>
         </div>
         <!--<div class="btcu-currency-card">Other cripto</div>
@@ -54,34 +70,84 @@
          <li>1</li>
          <li>2</li>
        </ul>-->
-        <button class="btcu-modal-content-button" for="btcu-modal" @click="requestpay">Pay {{selected == 'btc' ? 'with Bitcoin' : ''}}</button>
+        <button class="btcu-modal-content-button" :disabled="selected == ''" @click="loading=true ; requestpay()">Pay {{selected == 'btc' ? 'with Bitcoin' : ''}} {{selected == 'btcln' ? 'with Bitcoin Lighting' : ''}}
+            <i  v-show="loading" class="fa fa-cog fa-spin"></i></button>
      </div>
+          <!--
+
+                                                       STEP 2
+
+           -->
         <div v-if="step == 2">
             <div class="btcu-qr-code">
-                <img v-show="payment.show_qrcode == true" src="" alt="qr-code">
+                <img v-show="payment.show_qrcode == true" :src="payment.qr" alt="qr-code">
 
-                <img v-show="payment.show_qrpeer == true" src="" alt="peer">
+                <img v-if="payment.peer_code" v-show="payment.show_qrpeer == true" :src="payment.peer" alt="peer">
             </div>
+
+            <div>
+                <p style="font-size: 12px; text-align: center; margin-top: 30px">
+                    Send the indicated amount to the address below
+                </p>
+
+                <div style="height: 50px">
+                    <div style="font-size: 15px; text-align: center; margin-top: 5px; color:#27ae60;" v-show="loading">
+                        {{status}}
+                    </div>
+                    <i style="text-align: center; display: block; font-size: 15px; color:#27ae60; " v-show="loading" class="fa fa-cog fa-spin"></i>
+
+            </div>
+
+                <!-- QR-CODE  -->
 
             <div class="btcu-payment-cart">
                 <div class="btcu-payment">
                     <span>BTC</span>
-                    <input type="text" readonly>
+                    <input type="text" id="btcu-qr" v-model="payment.qr_code" readonly>
                     <button @click="payment.show_qrcode = !payment.show_qrcode, payment.show_qrpeer = false"><i class="fa fa-qrcode"></i></button>
-                    <button><i class="fa fa-copy"></i></button>
+                    <button @click="copyCode()" ><i class="fa fa-copy"></i></button>
                 </div>
-                <div class="btcu-payment">
+
+                <!-- PEER  -->
+
+                <div class="btcu-payment" v-if="payment.peer_code">
                     <span>PEER</span>
-                    <input type="text" readonly>
+                    <input type="text" id="btcu-peer" v-model="payment.peer_code" readonly>
                     <button @click="payment.show_qrpeer = !payment.show_qrpeer, payment.show_qrcode = false" ><i class="fa fa-qrcode"></i></button>
-                    <button><i class="fa fa-copy"></i></button>
+                    <button @click="copyPeer()"><i class="fa fa-copy"></i></button>
                 </div>
             </div>
         </div>
       </div>
+          <!--
+
+                                                       STEP 3
+
+                  -->
+        <div v-if="step == 3">
+            <i class="fa fa-smile-o"></i>
+            <h2  class="btcu-success">Paid and Confirmed</h2>
+            <div style="font-size: 12px;text-align: center;margin: 10px 0 10px 0">
+                In case of problems with payment, please contact customer support.
+            </div>
+        </div>
+          <!--
+
+                                                       STEP 4
+
+         -->
+        <div v-if="step == 4">
+            <i class="fa fa-frown-o"></i>
+            <h2 class="btcu-error">{{error}}</h2>
+            <div style="font-size: 12px;text-align: center;margin: 10px 0 10px 0">
+                In case of problems with payment, please contact customer support.
+            </div>
+        </div>
+
+
       <div class="btcu-modal-footer">
-        <div style="font-size: 10px;color: #888; margin: 10px 0 0px 0;float: left">Create {{date}}</div>
-        <div style="font-size: 10px;color: #888; margin: 10px 0 0px 0;float: right">Powered by <a href="https:\\btcu.biz">btcu.biz</a></div>
+        <div style="float: left">Create {{date}}</div>
+        <div style="float: right">Powered by <a href="https:\\btcu.biz">btcu.biz</a></div>
       </div>
       </div>
   </div>
@@ -90,6 +156,7 @@
 
 <script>
 import Countdown from './Countdown.vue'
+import 'v-toaster/dist/v-toaster.css'
 
 export default {
   name: 'app',
@@ -110,30 +177,23 @@ export default {
                 qr_code:'',
                 qr:'',
                 show_qrcode: false,
-                peer_code:'',
+                peer_code: null,
                 peer:'',
                 show_qrpeer: false,
             },
             order_id: '',
             date: new Date().toUTCString(),
             time: '',
-            cripto:{
-                btc: '',
-                btcln: '',
-            },
+            btc: '',
             error: 'Some errors',
             status:''
         }
     },
-    created() {
-        console.log(this.credits_packs);
-        console.log(this.discount);
-        console.log(this.email_confirm);
-    },
     methods: {
-        request: function (id,price) {
+        request: function (id,price,token) {
             this.amount = price;
             this.credits_pack_id = id;
+            this.token = token;
             this.axios.get('/personal/balance/buy_credits_submit/', {
                 params: {
                     amount: this.amount,
@@ -141,8 +201,8 @@ export default {
                     cripto: true
                 }
             }).then(response => {
-                console.log(response);
-                this.cripto.btc =  this.cripto.btcln = response.data.bitcoin;
+                console.log(response.data);
+                this.btc = response.data.btc;
                 this.show=true;
                 this.step=1;
 
@@ -151,42 +211,57 @@ export default {
                 this.error = error.response.data;
                 this.show=true;
                 this.step = 4;
+                if(error.response.status == 500){
+                    this.error = 'Widjet off';
+                }
             })
 
         },
         requestpay: function () {
             this.time = new Date().setMilliseconds(12 * 60 * 60 * 1000);
-            if (this.selected != ''){
-                setTimeout(() => {
-                    this.axios.get('/personal/balance/buy_credits_submit/', {
-                        params: {
-                            amount: this.amount,
-                            credits_pack_id: this.credits_pack_id,
-                            selected: this.selected,
-                            cripto: true
-                        }
-                    }).then(response => {
-                        console.log(response.data);
-                        this.payment.qr_code = response.data.qr_code;
-                        this.payment.qr = 'data:image/png;base64,' + response.data.qr;
-                        this.payment.peer_code = response.data.qr_peer;
-                        this.payment.peer = 'data:image/png;base64,' + response.data.peer;
-                        this.order_id = response.data.order_id;
-                        this.loading = false;
-                        this.step = 2;
+            if (this.email_confirm != 0) {
+                if (this.selected != '') {
+                    setTimeout(() => {
+                        this.axios.get('/personal/balance/buy_credits_submit/', {
+                            params: {
+                                amount: this.amount,
+                                credits_pack_id: this.credits_pack_id,
+                                selected: this.selected,
+                                cripto: true
+                            }
+                        }).then(response => {
+                            console.log(response.data);
+                            this.payment.qr_code = response.data.payment_request;
+                            this.payment.qr = 'data:image/png;base64,' + response.data.qr;
+                            this.payment.peer_code = response.data.peer_code;
+                            this.payment.peer = 'data:image/png;base64,' + response.data.peer;
+                            this.order_id = response.data.order_id;
+                            this.btc = response.data.amount;
+                            this.loading = false;
+                            this.step = 2;
+                            this.checkStatus();
 
-                    }).catch(error => {
-                        console.log(error.response);
-                        this.error = error.response.data;
-                        this.step = 4;
-                    })
-                }, 2000);
-            } else {
-                this.$toaster.error('Please select a currency to pay');
+                        }).catch(error => {
+                            console.log(error.response);
+                            this.error = error.response.data;
+                            this.step = 4;
+                            if(error.response.status == 500){
+                                this.error = 'Widjet off';
+                            }
+                        })
+                    }, 500);
+                } else {
+                    this.$toaster.error('Please select a currency to pay');
+                    this.loading = false;
+                }
+            }else {
+                this.$toaster.error('Please confirm email');
                 this.loading = false;
             }
         },
         checkStatus: function () {
+            this.status = 'Waiting for status confirmation.';
+            this.loading = true;
             status = setInterval(() => {
                 this.axios.get('/personal/balance/buy_credits_submit/', {
                     params: {
@@ -196,10 +271,6 @@ export default {
                 }).then(response => {
 
                     console.log(response.data);
-                    if (response.data.id == 0){
-                        this.status = 'Waiting for status confirmation.';
-                        this.loading = true;
-                    }
                     if (response.data.id == 1){
                         this.status = 'Status confirm. Please wait.';
                         this.loading = true;
@@ -208,6 +279,12 @@ export default {
                         window.clearInterval(status);
                         this.loading = false;
                         this.step = 3;
+                    }
+                    if (response.data.id == 3){
+                        window.clearInterval(status);
+                        this.loading = false;
+                        this.error = 'Operation canceled';
+                        this.step = 4;
                     }
 
                 }).catch(error => {
@@ -221,7 +298,7 @@ export default {
 
         },
         copyCode: function () {
-            let testingCodeToCopy = document.querySelector('#code')
+            let testingCodeToCopy = document.querySelector('#btcu-qr')
             testingCodeToCopy.setAttribute('type', 'text')
             testingCodeToCopy.select()
             document.execCommand('copy');
@@ -229,29 +306,46 @@ export default {
 
         },
         copyPeer: function () {
-            let testingCodeToCopy = document.querySelector('#peer')
+            let testingCodeToCopy = document.querySelector('#btcu-peer')
             testingCodeToCopy.setAttribute('type', 'text')
             testingCodeToCopy.select()
             document.execCommand('copy');
             this.$toaster.success('Peer copied successfully!');
 
-
-        },
-        start: function (sum,token,currency){
-            window.clearInterval(status);
-            this.counter=1800;
-            this.loading=false;
-            this.token=token;
-            this.sum=sum;
-            this.selected='';
-            this.currency= currency,
-                this.request()
         }
     }
 }
 </script>
 
 <style>
+
+    .btcu-success{
+        color: #27ae60;
+        font-size:25px;
+        text-align: center;
+    }
+    .fa-smile-o{
+        color: #27ae60;
+        text-align: center;
+        font-size: 70px;
+        display: block;
+    }
+    .btcu-error{
+        color: red;
+        font-size:25px;
+        text-align: center;
+    }
+    .fa-frown-o{
+        color: red;
+        text-align: center;
+        font-size: 70px;
+        display: block;
+    }
+    .btcu-modal-footer div{
+        font-size: 10px;
+        color: #888;
+        margin: 10px 0 0px 0
+    }
 
     .buy_credits_list li label .btcu-credits{
         background: #9e933c;
@@ -272,7 +366,7 @@ export default {
     }
 
     .btcu-payment button{
-        border: 1px solid white;
+        border: 1px solid #f4e640;
         background-color: inherit;
         cursor: pointer;
         height: 30px;
@@ -280,7 +374,7 @@ export default {
     }
     .btcu-payment span{
         width: 60px;
-        border: 1px solid white;
+        border: 1px solid #f4e640;
         height: 30px;
         text-align: center;
     }
@@ -293,7 +387,7 @@ export default {
         display: flex;
         flex: 1;
         align-items: center;
-        height: 40px;
+        height: 30px;
     }
       .btcu-payment input{
         height: 28px;
@@ -314,7 +408,6 @@ export default {
       .btcu-currency-card {
         display: flex;
         flex: 1;
-        height: 40px;
         cursor: pointer;
         padding: 20px 16px 20px 16px;
         border: 1px solid #f4e640;
@@ -333,7 +426,6 @@ export default {
         line-height: 1;
         display: inline-block;
         vertical-align: middle;
-        padding-bottom: 15px;
       }
       .btcu-title-cripto{
         float: right;
@@ -347,7 +439,7 @@ export default {
 
       .btcu-modal-header{
         margin-bottom: 20px;
-        height: 30px;
+        height: 40px;
       }
       .btcu-modal-footer{
         margin-top: 20px;
@@ -426,8 +518,8 @@ export default {
       .btcu-container .btcu-modal-content {
         position: fixed;
         top: 20%;
-        left: 33%;
-        width: 33%;
+        left: 25%;
+        width: 550px;
         height: auto;
         padding: 20px;
         background-color: #f0dd34;
@@ -463,7 +555,7 @@ export default {
         width: 100%;
         position: relative;
         float: right;
-        margin: 0;
+        margin: 10px 0 20px 0;
         padding: 10px 20px;
         color: white;
         font-weight: 100;
