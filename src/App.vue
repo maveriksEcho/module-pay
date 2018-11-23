@@ -2,7 +2,7 @@
     <div>
         <ul class="buy_credits_list">
     <li v-for="cred in credits_packs">
-        <input type="radio" name="btcu_credits_pack_id" :id="'btcu_credits_pack_id_' + cred.id" :value="cred.id" required @click="loading=false ; request(cred.id, cred.price, cred.credits_count)">
+        <input type="radio" name="btcu_credits_pack_id" :id="'btcu_credits_pack_id_' + cred.id" :value="cred.id" required @click="request(cred.id, cred.price, cred.credits_count)">
         <label :for="'btcu_credits_pack_id_' + cred.id" class="add_credits_btn">
             <span class="credits credits_value btcu-credits" :data-amount="cred.credits_count*10">{{(cred.credits_count*10).toFixed(2)}} TOKEN</span>
             <span class="amount btcu-amount">
@@ -51,14 +51,14 @@
      <div v-if="step == 1">
       <h2>Select payment currency</h2>
 
-         <div class="btcu-currency-card" @click="selected = 'btc'" :class="selected == 'btc' ? 'btcu-selected' : ''" >
+         <div class="btcu-currency-card" @click="select('BTC')" :class="selected == 'BTC' ? 'btcu-selected' : ''" >
            <i class="fa fa-btc fa-cus-form"></i>
            <div class="btcu-currency">
            <span>Bitcoin</span>
            <span>{{(btc).toFixed(8)}} btc</span>
          </div>
          </div>
-        <div class="btcu-currency-card" @click="selected = 'btcln'" :class="selected == 'btcln' ? 'btcu-selected' : ''" >
+        <div class="btcu-currency-card" @click="select('BTC LN')" :class="selected == 'BTC LN' ? 'btcu-selected' : ''" >
           <i class="fa fa-bolt fa-cus-form"></i>
           <div class="btcu-currency">
             <span>Bitcoin Lighting</span>
@@ -70,7 +70,7 @@
          <li>1</li>
          <li>2</li>
        </ul>-->
-        <button class="btcu-modal-content-button" :disabled="selected == ''" @click="loading=true ; requestpay()">Pay {{selected == 'btc' ? 'with Bitcoin' : ''}} {{selected == 'btcln' ? 'with Bitcoin Lighting' : ''}}
+        <button class="btcu-modal-content-button" :disabled="selected == ''" @click="loading=true ; requestpay()">Pay {{selected == 'BTC' ? 'with Bitcoin' : ''}} {{selected == 'BTC LN' ? 'with Bitcoin Lighting' : ''}}
             <i  v-show="loading" class="fa fa-cog fa-spin"></i></button>
      </div>
           <!--
@@ -176,7 +176,7 @@ export default {
             payment:{
                 qr_code:'',
                 qr:'',
-                show_qrcode: false,
+                show_qrcode: true,
                 peer_code: null,
                 peer:'',
                 show_qrpeer: false,
@@ -194,6 +194,8 @@ export default {
             this.amount = price;
             this.credits_pack_id = id;
             this.token = token;
+            this.loading = false,
+            this.selected = '',
             this.axios.get('/personal/balance/buy_credits_submit/', {
                 params: {
                     amount: this.amount,
@@ -263,9 +265,13 @@ export default {
             this.status = 'Waiting for status confirmation.';
             this.loading = true;
             status = setInterval(() => {
+                if(this.show == false){
+                    window.clearInterval(status);
+                }else {
                 this.axios.get('/personal/balance/buy_credits_submit/', {
                     params: {
                         order_id: this.order_id,
+                        selected: this.selected,
                         cripto: true
                     }
                 }).then(response => {
@@ -294,7 +300,8 @@ export default {
                     this.loading = false;
                     this.step = 4;
                 })
-            }, 5000)
+                }
+            }, 5000);
 
         },
         copyCode: function () {
@@ -312,6 +319,11 @@ export default {
             document.execCommand('copy');
             this.$toaster.success('Peer copied successfully!');
 
+        },
+        select: function (selected) {
+            if(this.loading == false){
+                this.selected = selected;
+            }
         }
     }
 }
@@ -373,6 +385,7 @@ export default {
         width: 30px;
     }
     .btcu-payment span{
+        padding-top: 3px;
         width: 60px;
         border: 1px solid #f4e640;
         height: 30px;
@@ -467,9 +480,6 @@ export default {
       .btcu-container .btcu-modal-button {
         position: relative;
         display: block;
-       /* margin: 100px auto;
-        padding: 20px 25px 34px;*/
-       /* width: 50px;*/
         font-size: 36px;
         font-weight: 300;
         color: #2980b9;
@@ -517,8 +527,9 @@ export default {
       }
       .btcu-container .btcu-modal-content {
         position: fixed;
-        top: 20%;
-        left: 25%;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
         width: 550px;
         height: auto;
         padding: 20px;
@@ -528,7 +539,6 @@ export default {
         opacity: 1;
         pointer-events: auto;
         cursor: auto;
-        transform: scale(1);
         transition: transform 500ms;
         box-shadow: -15px 20px  #8ab472;
       }
